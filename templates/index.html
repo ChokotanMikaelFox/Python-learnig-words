@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Учим Python</title>
+</head>
+<body style="text-align: center; font-family: sans-serif; padding-top: 50px;">
+    <h1>Как переводится: {{ word }}?</h1>
+    <form action="/check" method="post">
+        <input type="hidden" name="word" value="{{ word }}">
+        <input type="text" name="answer" placeholder="Введите перевод" required>
+        <button type="submit">Проверить</button>
+    </form>
+</body>
+</html>
