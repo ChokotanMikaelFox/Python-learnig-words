@@ -63,7 +63,28 @@ def check():
         
     return render_template('result.html', result=result, color=color, info=info)
 
-# Добавим кнопку "Сбросить прогресс", чтобы можно было начать заново
+# Страница слов
+@app.route('/dictionary')
+def dictionary():
+    return render_template('dictionary.html', words=WORDS_DB)
+
+#Новые слова
+@app.route('/add_word', methods=['POST'])
+def add_word():
+    eng = request.form.get('eng','').lower().strip()
+    rus = request.form.get('rus','').lower().strip()
+    info = request.form.get('info','').lower().strip()
+
+    if eng and rus and info:
+        base_path = os.path.dirname(__file__)
+        file_path = os.path.join(base_path, 'words.txt')
+        with open(file_path, 'a', encoding='utf-8') as f:
+            f.write(f"\n{eng};{rus};{info}")
+
+        WORDS_DB[eng] = [rus, info]
+    return redirect('/dictionary')
+
+# Чтобы можно было начать заново
 @app.route('/reset')
 def reset():
     USED_WORDS.clear() 
