@@ -50,12 +50,22 @@
 </head>
 <body>
     <div class="card">
+        {% if done %}
+            <h1> Поздравляем!</h1>
+            <p>Вы выучили все слова в этом словаре.</p>
+            <!-- Ссылка на сброс прогресса -->
+            <a href="/reset" style="text-decoration: none;">
+                <button type="button">Начать заново</button>
+            </a>
+        <!-- Иначе (если слова еще есть) показываем обычную форму -->
+        {% else %}
         <h1>Как переводится: <br> <span style="color: #0ea5e9;">{{ word }}</span>?</h1>
         <form action="/check" method="post">
             <input type="hidden" name="word" value="{{ word }}">
             <input type="text" name="answer" placeholder="Введите перевод" required autofocus>
             <button type="submit">Проверить</button>
         </form>
+        {% endif %}
     </div>
 </body>
 </html>
