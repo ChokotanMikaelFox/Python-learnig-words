@@ -17,18 +17,28 @@
 <body>
     <div class="container">
         <h1>Мои слова</h1>
-        
-        <table>
-            <tr><th>En</th><th>Ru</th><th>Инфо</th></tr>
-            {% for eng, data in words.items() %}
-            <tr>
-                <td><b>{{ eng }}</b></td>
-                <td>{{ data[0] }}</td>
-                <td style="font-size: 0.8em; color: gray;">{{ data[1] }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-
+<table>
+    <tr>
+        <th>En</th>
+        <th>Ru</th>
+        <th>Инфо</th>
+        <th>Действие</th> 
+    </tr>
+    {% for eng, data in words.items() %}
+    <tr>
+        <td><b>{{ eng }}</b></td>
+        <td>{{ data[0] }}</td>
+        <td style="font-size: 0.8em; color: gray;">{{ data[1] }}</td>
+        <td>
+            <a href="/delete_word/{{ eng }}" 
+               onclick="return confirm('Точно удалить?')" 
+               style="color: #ef4444; text-decoration: none; font-weight: bold;">
+               ❌
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
         <h3>Добавить новое:</h3>
         <form action="/add_word" method="post" class="add-form">
             <input type="text" name="eng" placeholder="Слово на английском" required>
