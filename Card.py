@@ -6,6 +6,11 @@ import os # Путь к файлам
 # Создание веб-приложения
 app = Flask(__name__)
 
+#Стаки
+WORDS_DB = {}
+USED_WORDS = []
+STREAK = 0 
+
 # Функция, читающая текст из текстового файла
 def load_words():
     words = {} # Создает пустой словарь для хранения данных
@@ -23,37 +28,50 @@ def load_words():
 
 # Загрузка слова один раз при старте приложения
 WORDS_DB = load_words()
-# Создаем список показанных слова
-USED_WORDS = []
+show_welcome = True
 
 @app.route('/')
 def index():
-    # Составляем список слов, которых ЕЩЕ НЕТ в списке использованных
+    global show_welcome
+    if show_welcome:
+        show_welcome = False
+        return render_template('index.html', welcome=True)
+    # Стрик
     available_words = [w for w in WORDS_DB.keys() if w not in USED_WORDS]
     if not available_words:
         return render_template('index.html', done=True)
     # Выбираем случайное слово из оставшихся
     random_word = random.choice(available_words)
-    return render_template('index.html', word=random_word, done=False)
+
+    total = len(WORDS_DB)
+    used = len(USED_WORDS)
+    progress = (used/total) * 100 if total > 0 else 0
+    return render_template('index.html', word=random_word, done=False, streak=STREAK, progress=progress)
 
 @app.route('/check', methods=['POST'])
 def check():
+    global STREAK # Серия
     user_answer = request.form.get('answer', '').lower().strip()
     word_key = request.form.get('word', '')
+
     if word_key not in WORDS_DB:
         return redirect('/')
-    # Срабатывает в момент проверки
-    if word_key not in USED_WORDS:
-        USED_WORDS.append(word_key)
+    
     correct_answer = WORDS_DB[word_key][0]
     info = WORDS_DB[word_key][1]
+
     if user_answer == correct_answer:
         result = "Правильно!"
         color = "green"
+        STREAK += 1 # Серия
+        # Механика заеб..ие словом
+        if word_key not in USED_WORDS:
+            USED_WORDS.append(word_key)
     else:
         result = f"Ошибка! Правильно: {correct_answer}"
         color = "red"
-    return render_template('result.html', result=result, color=color, info=info)
+        STREAK = 0 #Серия
+    return render_template('result.html', result=result, color=color, info=info, streak=STREAK)
 
 # Страница слов
 @app.route('/dictionary')
@@ -107,6 +125,7 @@ def delete_word(word_key):
 @app.route('/reset')
 def reset():
     USED_WORDS.clear() 
+    STREAK = 0
     return "Прогресс сброшен! <a href='/'>Вернуться на главную</a>"
 
 if __name__ == '__main__':

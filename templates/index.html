@@ -6,67 +6,139 @@
     <style>
         /* Светло-синий версия 1 */
         body { 
-            font-family: sans-serif; 
-            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); 
-            color: #1e3a8a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             height: 100vh; 
             margin: 0; 
+            overflow: hidden;
         }
+
+        /* Увеличена карточка */
         .card { 
-            background: #ffffff; 
-            padding: 40px; 
-            border-radius: 25px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-            text-align: center;
+            background: white; 
+            padding: 50px; /* Увеличен внутренние отступы */
+            border-radius: 35px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center; 
             width: 100%;
-            max-width: 400px;
+            max-width: 450px; /* Сделали карточку шире */
+            
+            /* Переход при появлении */
+            animation: cardAppear 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.3s ease;
         }
-        h1 { color: #0369a1; font-size: 28px; margin-bottom: 20px; }
+
+        @keyframes cardAppear {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Полоска прогресса */
+        .progress-container { 
+            width: 100%; 
+            background: #f1f5f9; 
+            border-radius: 20px; 
+            height: 12px; 
+            margin-bottom: 30px; 
+            overflow: hidden; 
+        }
+        .progress-bar { 
+            height: 100%; 
+            background: linear-gradient(90deg, #0ea5e9, #38bdf8); 
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        }
+
+        /* Тексты */
+        h1 { color: #1e3a8a; font-size: 28px; margin-bottom: 10px; line-height: 1.4; }
+        .word-highlight { color: #0ea5e9; font-weight: 800; font-size: 32px; display: block; margin-top: 10px; }
+        .streak-fire { color: #f97316; font-weight: bold; font-size: 18px; margin-bottom: 20px; }
+
+        /* Поле ввода */
         input { 
             width: 100%; 
-            padding: 12px; 
-            margin-bottom: 20px; 
-            border: 2px solid #bae6fd; 
-            border-radius: 10px; 
-            box-sizing: border-box;
-            font-size: 16px;
+            padding: 16px; 
+            margin: 25px 0; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 15px; 
+            box-sizing: border-box; 
+            font-size: 18px; 
+            outline: none; 
+            transition: all 0.3s;
         }
-        button { 
+        input:focus { border-color: #0ea5e9; box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); }
+
+        /* Кнопки */
+        .btn { 
             width: 100%; 
-            padding: 12px; 
-            background-color: #0ea5e9; 
+            padding: 16px; 
+            background: #0ea5e9; 
             color: white; 
             border: none; 
-            border-radius: 10px; 
+            border-radius: 15px; 
+            font-weight: bold; 
+            font-size: 18px;
             cursor: pointer; 
-            font-size: 16px; 
-            font-weight: bold;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            box-sizing: border-box;
         }
-        button:hover { background-color: #0284c7; }
+        .btn:hover { background: #0284c7; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(2, 132, 199, 0.2); }
+        .btn:active { transform: translateY(-1px); }
+
+        .btn-secondary { background: #64748b; margin-top: 20px; }
+        .btn-secondary:hover { background: #475569; }
+
+        /* Словарь */
+        .dict-link { display: block; margin-top: 25px; color: #94a3b8; text-decoration: none; font-size: 15px; transition: 0.3s; }
+        .dict-link:hover { color: #0ea5e9; }
     </style>
 </head>
 <body>
     <div class="card">
-        {% if done %}
-            <h1> Поздравляем!</h1>
-            <p>Вы выучили все слова в этом словаре.</p>
-            <!-- Ссылка на сброс прогресса -->
-            <a href="/reset" style="text-decoration: none;">
-                <button type="button">Начать заново</button>
-            </a>
-        <!-- Иначе (если слова еще есть) показываем обычную форму -->
+        {% if welcome %}
+            <!-- ТИТУЛЬНЫЙ ЭКРАН  -->
+            <div style="font-size: 60px; margin-bottom: 20px;">🐍</div>
+            <h1>Python Learning Words</h1>
+            <p style="color: #64748b; font-size: 18px; margin-bottom: 35px; line-height: 1.6;">
+                Обучающее веб-приложение для изучения терминологии Python <br>
+                Рандомайзер карточек синтаксиса
+            </p>
+            
+            <a href="/" class="btn"> Начать тренировку</a>
+            <a href="/dictionary" class="dict-link">📖 Мой словарь</a>
+        {% elif done %}
+            <div style="font-size: 60px; margin-bottom: 20px;"></div>
+            <h1>Поздравляем!</h1>
+            <p style="color: #64748b; font-size: 18px; margin-bottom: 30px;">
+                Вы выучили все слова в этом словаре. Добавьте новые слова и испытайте себя еще раз!
+            </p>
+            <a href="/reset" class="btn">Начать заново</a>
+            <a href="/dictionary" class="dict-link">Редактировать словарь</a>
+
         {% else %}
-        <h1>Как переводится: <br> <span style="color: #0ea5e9;">{{ word }}</span>?</h1>
-        <form action="/check" method="post">
-            <input type="hidden" name="word" value="{{ word }}">
-            <input type="text" name="answer" placeholder="Введите перевод" required autofocus>
-            <button type="submit">Проверить</button>
-        </form>
-        <a href="/dictionary" style="display: block; margin-top: 20px; color: #0369a1; text-decoration: none; font-size: 14px; font-weight: bold;">  Открыть словарь </a>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: {{ progress }}%;"></div>
+            </div>
+
+            {% if streak > 0 %}
+            <div class="streak-fire">🔥 Серия: {{ streak }}</div>
+            {% endif %}
+
+            <h1>Как переводится: <br> <span class="word-highlight">{{ word }}</span>?</h1>
+
+            <form action="/check" method="post">
+                <input type="hidden" name="word" value="{{ word }}">
+                <input type="text" name="answer" placeholder="Введите ваш ответ..." required autofocus autocomplete="off">
+                <button type="submit" class="btn">Проверить</button>
+            </form>
+
+            <a href="/dictionary" class="dict-link"> Открыть словарь</a>
         {% endif %}
     </div>
+
 </body>
 </html>

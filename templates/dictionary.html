@@ -2,50 +2,119 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Словарь</title>
+    <title>Мой Словарь — Учим Python</title>
     <style>
-        body { font-family: sans-serif; background: #f0f9ff; display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 500px; }
-        h1 { color: #0369a1; text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border-bottom: 1px solid #e2e8f0; padding: 10px; text-align: left; }
-        .add-form input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #bae6fd; border-radius: 8px; box-sizing: border-box; }
-        .btn { display: block; width: 100%; padding: 10px; background: #0ea5e9; color: white; border: none; border-radius: 8px; cursor: pointer; text-align: center; text-decoration: none; font-weight: bold; }
-        .btn-back { background: #64748b; margin-top: 10px; }
+        /* Общий стиль в духе основной игры */
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+            margin: 0; padding: 40px 20px;
+            display: flex; justify-content: center;
+        }
+
+        .container { 
+            width: 100%; max-width: 550px; 
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1 { color: #1e3a8a; text-align: center; font-size: 32px; margin-bottom: 30px; }
+
+        /* Таблица заменена на карточки слов */
+        .word-list { margin-bottom: 40px; }
+
+        .word-row {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .word-row:hover { 
+            transform: scale(1.02); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+        }
+
+        .word-main b { color: #0ea5e9; font-size: 18px; display: block; }
+        .word-main span { color: #1e293b; font-weight: 500; }
+        .word-info { color: #94a3b8; font-size: 13px; margin-top: 4px; display: block; }
+
+        .delete-btn {
+            text-decoration: none;
+            font-size: 18px;
+            padding: 8px;
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+        .delete-btn:hover { background: #fee2e2; }
+
+        /* Форма добавления */
+        .add-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 2px dashed #bae6fd;
+        }
+
+        .add-card h3 { color: #1e3a8a; margin-top: 0; margin-bottom: 20px; }
+
+        input { 
+            width: 100%; padding: 14px; margin-bottom: 12px; 
+            border: 2px solid #f1f5f9; border-radius: 12px; 
+            box-sizing: border-box; font-size: 16px; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: #0ea5e9; background: #f0f9ff; }
+
+        .btn {
+            display: block; width: 100%; padding: 16px; 
+            background: #0ea5e9; color: white; border: none;
+            border-radius: 12px; font-weight: bold; cursor: pointer;
+            text-align: center; text-decoration: none; font-size: 16px;
+            transition: all 0.3s;
+        }
+        .btn:hover { background: #0284c7; transform: translateY(-2px); }
+
+        .btn-back { background: #64748b; margin-top: 20px; }
+        .btn-back:hover { background: #475569; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Мои слова</h1>
-<table>
-    <tr>
-        <th>En</th>
-        <th>Ru</th>
-        <th>Инфо</th>
-        <th>Действие</th> 
-    </tr>
-    {% for eng, data in words.items() %}
-    <tr>
-        <td><b>{{ eng }}</b></td>
-        <td>{{ data[0] }}</td>
-        <td style="font-size: 0.8em; color: gray;">{{ data[1] }}</td>
-        <td>
-            <a href="/delete_word/{{ eng }}" 
-               onclick="return confirm('Точно удалить?')" 
-               style="color: #ef4444; text-decoration: none; font-weight: bold;">
-               ❌
-            </a>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
-        <h3>Добавить новое:</h3>
-        <form action="/add_word" method="post" class="add-form">
-            <input type="text" name="eng" placeholder="Слово на английском" required>
-            <input type="text" name="rus" placeholder="Перевод на русский" required>
-            <input type="text" name="info" placeholder="Описание/Пример" required>
-            <button type="submit" class="btn">Добавить в базу</button>
-        </form>
+        <h1>📖 Мой Словарь</h1>
+
+        <div class="word-list">
+            {% for eng, data in words.items() %}
+            <div class="word-row">
+                <div class="word-main">
+                    <b>{{ eng }}</b>
+                    <span>{{ data[0] }}</span>
+                    <span class="word-info">{{ data[1] }}</span>
+                </div>
+                <a href="/delete_word/{{ eng }}" 
+                   onclick="return confirm('Удалить слово из базы?')" 
+                   class="delete-btn">
+                   🗑️
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="add-card">
+            <h3>Добавить новое слово</h3>
+            <form action="/add_word" method="post">
+                <input type="text" name="eng" placeholder="Английское слово" required>
+                <input type="text" name="rus" placeholder="Перевод на русский" required>
+                <input type="text" name="info" placeholder="Описание или пример" required>
+                <button type="submit" class="btn">Добавить в базу</button>
+            </form>
+        </div>
 
         <a href="/" class="btn btn-back">Вернуться к тренировке</a>
     </div>
