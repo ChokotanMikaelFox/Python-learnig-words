@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Учим Python</title>
     <style>
-        /* Светло-синий версия 1 */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
@@ -16,17 +15,14 @@
             overflow: hidden;
         }
 
-        /* Увеличена карточка */
         .card { 
             background: white; 
-            padding: 50px; /* Увеличен внутренние отступы */
+            padding: 50px; 
             border-radius: 35px; 
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             text-align: center; 
             width: 100%;
-            max-width: 450px; /* Сделали карточку шире */
-            
-            /* Переход при появлении */
+            max-width: 450px; 
             animation: cardAppear 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             transition: all 0.3s ease;
         }
@@ -36,7 +32,6 @@
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* Полоска прогресса */
         .progress-container { 
             width: 100%; 
             background: #f1f5f9; 
@@ -50,17 +45,44 @@
             background: linear-gradient(90deg, #0ea5e9, #38bdf8); 
             transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); 
         }
+        .lives-container { 
+            font-size: 24px; margin-bottom: 10px; 
+            display: flex; justify-content: center; gap: 5px;
+        }
+        .heart { 
+            display: inline-block; 
+            animation: heartBeat 1.5s infinite ease-in-out;
+        }
+        .heart.danger { 
+            animation: heartBeat 0.6s infinite ease-in-out; 
+            filter: drop-shadow(0 0 5px red);
+        }
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
 
-        /* Тексты */
         h1 { color: #1e3a8a; font-size: 28px; margin-bottom: 10px; line-height: 1.4; }
         .word-highlight { color: #0ea5e9; font-weight: 800; font-size: 32px; display: block; margin-top: 10px; }
         .streak-fire { color: #f97316; font-weight: bold; font-size: 18px; margin-bottom: 20px; }
 
-        /* Поле ввода */
+        .hint-box {
+            background: #fff7ed;
+            border: 1px solid #ffedd5;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            color: #9a3412;
+            font-size: 14px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
         input { 
             width: 100%; 
             padding: 16px; 
-            margin: 25px 0; 
+            margin: 15px 0 25px 0; 
             border: 2px solid #e2e8f0; 
             border-radius: 15px; 
             box-sizing: border-box; 
@@ -70,7 +92,6 @@
         }
         input:focus { border-color: #0ea5e9; box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); }
 
-        /* Кнопки */
         .btn { 
             width: 100%; 
             padding: 16px; 
@@ -87,48 +108,81 @@
             box-sizing: border-box;
         }
         .btn:hover { background: #0284c7; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(2, 132, 199, 0.2); }
-        .btn:active { transform: translateY(-1px); }
 
-        .btn-secondary { background: #64748b; margin-top: 20px; }
+        .btn-secondary { background: #64748b; margin-top: 15px; }
         .btn-secondary:hover { background: #475569; }
 
-        /* Словарь */
+        .control-panel {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-small {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+            text-decoration: none;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            transition: 0.2s;
+        }
+        .btn-small:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .btn-exit { color: #ef4444; border-color: #fee2e2; }
+        .btn-exit:hover { background: #fef2f2; }
+
         .dict-link { display: block; margin-top: 25px; color: #94a3b8; text-decoration: none; font-size: 15px; transition: 0.3s; }
         .dict-link:hover { color: #0ea5e9; }
     </style>
 </head>
 <body>
-    <div class="card">
+     <div class="card">
         {% if welcome %}
-            <!-- ТИТУЛЬНЫЙ ЭКРАН  -->
             <div style="font-size: 60px; margin-bottom: 20px;">🐍</div>
             <h1>Python Learning Words</h1>
             <p style="color: #64748b; font-size: 18px; margin-bottom: 35px; line-height: 1.6;">
-                Обучающее веб-приложение для изучения терминологии Python <br>
-                Рандомайзер карточек синтаксиса
+                Обучающее веб-приложение для изучения терминологии Python
             </p>
-            
-            <a href="/" class="btn"> Начать тренировку</a>
-            <a href="/dictionary" class="dict-link">📖 Мой словарь</a>
+            <a href="/?start=1" class="btn">Начать тренировку</a>
+            <a href="/dictionary" class="btn btn-secondary">📖 Мой словарь</a>
+
+        {% elif game_over %}
+            <div style="font-size: 60px; margin-bottom: 20px;">💀</div>
+            <h1>Игра окончена!</h1>
+            <p style="color: #64748b; margin-bottom: 30px;">Потрачено. Попробуйте еще раз!</p>
+            <a href="/?start=1" class="btn">Повторить попытку</a>
+            <a href="/?reset=1" class="dict-link">Вернуться в главное меню</a>
+
         {% elif done %}
-            <div style="font-size: 60px; margin-bottom: 20px;"></div>
+            <div style="font-size: 60px; margin-bottom: 20px;">🏆</div>
             <h1>Поздравляем!</h1>
-            <p style="color: #64748b; font-size: 18px; margin-bottom: 30px;">
-                Вы выучили все слова в этом словаре. Добавьте новые слова и испытайте себя еще раз!
-            </p>
+            <p style="color: #64748b; font-size: 18px; margin-bottom: 30px;">Слова закончились</p>
             <a href="/reset" class="btn">Начать заново</a>
-            <a href="/dictionary" class="dict-link">Редактировать словарь</a>
+            <a href="/?reset=1" class="dict-link">Вернуться в главное меню</a>
 
         {% else %}
             <div class="progress-container">
                 <div class="progress-bar" style="width: {{ progress }}%;"></div>
             </div>
 
+            <div class="lives-container">
+                {% for i in range(lives) %}
+                    <span class="heart {% if lives == 1 %}danger{% endif %}">❤️</span>
+                {% endfor %}
+            </div>
+
             {% if streak > 0 %}
             <div class="streak-fire">🔥 Серия: {{ streak }}</div>
             {% endif %}
 
-            <h1>Как переводится: <br> <span class="word-highlight">{{ word }}</span>?</h1>
+            <h1>Как переводится: <br> <span class="word-highlight">{{ word }}</span></h1>
+
+            {% if request.args.get('show_hint') %}
+                <div class="hint-box">
+                    <strong>Подсказка:</strong> {{ hint }}
+                </div>
+            {% endif %}
 
             <form action="/check" method="post">
                 <input type="hidden" name="word" value="{{ word }}">
@@ -136,9 +190,19 @@
                 <button type="submit" class="btn">Проверить</button>
             </form>
 
-            <a href="/dictionary" class="dict-link"> Открыть словарь</a>
+            <div class="control-panel">
+                 <a href="?show_hint=1&word={{ word }}" class="btn-small">💡 Подсказка</a>
+                <a href="/?reset=1" class="btn-small btn-exit" onclick="return confirm('Весь прогресс будет сброшен. Выйти?')">🏠 В меню</a>
+            </div>
         {% endif %}
     </div>
 
+    <!-- Автофокус для инпута при загрузке подсказки -->
+    <script>
+        window.onload = function() {
+            const input = document.querySelector('input[type="text"]');
+            if (input) input.focus();
+        };
+    </script>
 </body>
 </html>

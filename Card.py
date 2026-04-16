@@ -10,6 +10,7 @@ app = Flask(__name__)
 WORDS_DB = {}
 USED_WORDS = []
 STREAK = 0 
+LIVES = 3
 
 # Функция, читающая текст из текстового файла
 def load_words():
@@ -32,25 +33,48 @@ show_welcome = True
 
 @app.route('/')
 def index():
-    global show_welcome
-    if show_welcome:
+    global show_welcome, STREAK, USED_WORDS, LIVES
+
+    if request.args.get('reset'):
+        show_welcome = True
+        STREAK = 0
+        LIVES = 3
+        USED_WORDS.clear()
+        return redirect('/')
+    
+    if request.args.get('start'):
         show_welcome = False
+        LIVES = 3
+        return redirect('/')
+        
+    if show_welcome:
         return render_template('index.html', welcome=True)
-    # Стрик
+    
+    if LIVES <=0:
+        return render_template('index.html', game_over=True)
+    
     available_words = [w for w in WORDS_DB.keys() if w not in USED_WORDS]
-    if not available_words:
-        return render_template('index.html', done=True)
-    # Выбираем случайное слово из оставшихся
-    random_word = random.choice(available_words)
+    word_from = request.args.get('word')
+
+    if word_from and word_from in WORDS_DB:
+        current_word = word_from
+        STREAK = 0
+    else:
+        if not available_words:
+            return render_template('index.html', done=True)
+        
+        current_word = random.choice(available_words)
 
     total = len(WORDS_DB)
     used = len(USED_WORDS)
     progress = (used/total) * 100 if total > 0 else 0
-    return render_template('index.html', word=random_word, done=False, streak=STREAK, progress=progress)
+    word_data = WORDS_DB.get(current_word)
+    hint_text = word_data[1] if word_data and len(word_data)> 1 else "Описание отсутствует"
+    return render_template('index.html', word=current_word, done=False, streak=STREAK, progress=progress, hint=hint_text, lives=LIVES)
 
 @app.route('/check', methods=['POST'])
 def check():
-    global STREAK # Серия
+    global STREAK, LIVES # Стаки, жизни (когда нибудь до опыта дойду Q_Q)
     user_answer = request.form.get('answer', '').lower().strip()
     word_key = request.form.get('word', '')
 
@@ -68,6 +92,7 @@ def check():
         if word_key not in USED_WORDS:
             USED_WORDS.append(word_key)
     else:
+        LIVES -= 1
         result = f"Ошибка! Правильно: {correct_answer}"
         color = "red"
         STREAK = 0 #Серия
@@ -124,9 +149,11 @@ def delete_word(word_key):
 # Чтобы можно было начать заново
 @app.route('/reset')
 def reset():
+    global USED_WORDS, STREAK, LIVES
     USED_WORDS.clear() 
     STREAK = 0
-    return "Прогресс сброшен! <a href='/'>Вернуться на главную</a>"
+    LIVES = 3
+    return redirect('/')
 
 if __name__ == '__main__':
     app.run(debug=True)
