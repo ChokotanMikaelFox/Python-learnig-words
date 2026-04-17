@@ -90,7 +90,9 @@
         <h1>📖 Мой Словарь</h1>
 
         <div class="word-list">
-            {% for eng, data in words.items() %}
+            {% for lvl, words_list in words.items() %}
+                <h2 style="color: #64748b; font-size: 18px; margin: 20px 0 10px 10px;">Уровень {{ lvl }}</h2>
+                {% for eng, data in words_list.items() %}
             <div class="word-row">
                 <div class="word-main">
                     <b>{{ eng }}</b>
@@ -104,6 +106,7 @@
                 </a>
             </div>
             {% endfor %}
+        {% endfor %}
         </div>
 
         <div class="add-card">
@@ -112,6 +115,11 @@
                 <input type="text" name="eng" placeholder="Английское слово" required>
                 <input type="text" name="rus" placeholder="Перевод на русский" required>
                 <input type="text" name="info" placeholder="Описание или пример" required>
+                <select name="level" style="width: 100%; padding: 14px; margin-bottom: 12px; border: 2px solid #f1f5f9; border-radius: 12px; font-size: 16px; color: #64748b; outline: none;">
+                    <option value="1">Уровень 1 (Легко)</option>
+                    <option value="2">Уровень 2 (Средне)</option>
+                    <option value="3">Уровень 3 (Сложно)</option>   
+                </select>
                 <button type="submit" class="btn">Добавить в базу</button>
             </form>
         </div>

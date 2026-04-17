@@ -2,38 +2,55 @@
 from flask import Flask, render_template, request, redirect 
 import random # Рандомайзер списка
 import os # Путь к файлам 
-
+import shutil
 # Создание веб-приложения
 app = Flask(__name__)
 
-#Стаки
+
 WORDS_DB = {}
 USED_WORDS = []
 STREAK = 0 
 LIVES = 3
+CURRENT_LEVEL = "1"
 
-# Функция, читающая текст из текстового файла
-def load_words():
-    words = {} # Создает пустой словарь для хранения данных
-    base_path = os.path.dirname(__file__) # Обозначение папки, где лежит скрипт 
-    file_path = os.path.join(base_path, 'words.txt') # Соединение пути к папке с файлом 
-    try: 
-        with open(file_path, 'r', encoding='utf-8') as f: # Открытие файла для чтения с поддержкой русского языка
-            for line in f:
-                parts = line.strip().split(';', 2) #Деление строки на 3 части по символу
-                if len(parts) == 3:
-                    words[parts[0].lower().strip()] = [parts[1].lower().strip(), parts[2].strip()] # Сохранение по типу ключ - английское слово, значение - перевод и описание
-    except: # Если нет текстового файла (или ошибка с ним), то слово по умолчанию
-        words = {"python": ["Питон", "Пайтон"]}
-    return words
 
-# Загрузка слова один раз при старте приложения
-WORDS_DB = load_words()
+class WordManager:
+    def __init__(self):
+        self.words_db = {"1": {}, "2": {}, "3": {}}
+        self.base_path = os.path.dirname(__file__)
+        self.file_path = os.path.join(self.base_path, 'words.txt')
+        self.backup_path = os.path.join(self.base_path, 'words.txt.bak')
+        if not os.path.exists(self.file_path):
+            with open(self.file_path, 'w', encoding='utf-8') as f:
+                pass
+        self.load_words()
+    def load_words(self):
+        try: 
+            if os.path.exists(self.file_path):
+                with open(self.file_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        parts = line.strip().split(';', 3)
+                        if len(parts) == 4:
+                            eng, rus, info, lvl = [p.strip() for p in parts]
+                            if lvl in self.words_db:
+                                self.words_db[lvl][eng.lower()] = [rus.lower(), info]
+        except Exception as e:
+            print(f"Ошибка загрузки: {e}")
+    def save_to_file(self):
+        lines = []
+        for lvl, words in self.words_db.items():
+            for eng, data in words.items():
+                lines.append(f"{eng};{data[0]};{data[1]};{lvl}")
+        with open(self.file_path, 'w', encoding='utf-8') as f:
+            f.write("\n".join(lines))    
+
+
+WM = WordManager()
 show_welcome = True
 
 @app.route('/')
 def index():
-    global show_welcome, STREAK, USED_WORDS, LIVES
+    global show_welcome, STREAK, USED_WORDS, LIVES, CURRENT_LEVEL
 
     if request.args.get('reset'):
         show_welcome = True
@@ -52,11 +69,11 @@ def index():
     
     if LIVES <=0:
         return render_template('index.html', game_over=True)
-    
-    available_words = [w for w in WORDS_DB.keys() if w not in USED_WORDS]
+    lvl_words = WM.words_db.get(CURRENT_LEVEL, {})
+    available_words = [w for w in lvl_words.keys() if w not in USED_WORDS]
     word_from = request.args.get('word')
 
-    if word_from and word_from in WORDS_DB:
+    if word_from and word_from in lvl_words:
         current_word = word_from
         STREAK = 0
     else:
@@ -65,30 +82,30 @@ def index():
         
         current_word = random.choice(available_words)
 
-    total = len(WORDS_DB)
+    total = len(lvl_words)
     used = len(USED_WORDS)
     progress = (used/total) * 100 if total > 0 else 0
-    word_data = WORDS_DB.get(current_word)
+    word_data = lvl_words.get(current_word)
     hint_text = word_data[1] if word_data and len(word_data)> 1 else "Описание отсутствует"
     return render_template('index.html', word=current_word, done=False, streak=STREAK, progress=progress, hint=hint_text, lives=LIVES)
 
 @app.route('/check', methods=['POST'])
 def check():
-    global STREAK, LIVES # Стаки, жизни (когда нибудь до опыта дойду Q_Q)
+    global STREAK, LIVES, CURRENT_LEVEL #(когда нибудь до опыта дойду Q_Q)
     user_answer = request.form.get('answer', '').lower().strip()
     word_key = request.form.get('word', '')
-
-    if word_key not in WORDS_DB:
+    lvl_words = WM.words_db.get(CURRENT_LEVEL, {})
+    if word_key not in lvl_words:
         return redirect('/')
     
-    correct_answer = WORDS_DB[word_key][0]
-    info = WORDS_DB[word_key][1]
+    correct_answer = lvl_words[word_key][0]
+    info = lvl_words[word_key][1]
 
     if user_answer == correct_answer:
         result = "Правильно!"
         color = "green"
-        STREAK += 1 # Серия
-        # Механика заеб..ие словом
+        STREAK += 1 
+        
         if word_key not in USED_WORDS:
             USED_WORDS.append(word_key)
     else:
@@ -101,52 +118,32 @@ def check():
 # Страница слов
 @app.route('/dictionary')
 def dictionary():
-    return render_template('dictionary.html', words=WORDS_DB)
+    return render_template('dictionary.html', words=WM.words_db)
 
-#Новые слова
+
 @app.route('/add_word', methods=['POST'])
 def add_word():
     eng = request.form.get('eng','').lower().strip()
     rus = request.form.get('rus','').lower().strip()
     info = request.form.get('info','').strip()
-
+    lvl = request.form.get('level','1')
+    
     if eng and rus and info:
-        base_path = os.path.dirname(__file__)
-        file_path = os.path.join(base_path, 'words.txt')
-        # чтоб не крашился при добавлении слова
-        file_is_empty = os.path.getsize(file_path) == 0 if os.path.exists(file_path) else True
-        with open(file_path, 'a', encoding='utf-8') as f:
-            if not file_is_empty:
-                f.write('\n')
-            f.write(f"\n{eng};{rus};{info}")
+        if lvl not in WM.words_db:
+            WM.words_db[lvl] = {}
+        WM.words_db[lvl][eng] = [rus, info]
+        WM.save_to_file()
+    return redirect('/dictionary')  
 
-        WORDS_DB[eng] = [rus, info]
-    return redirect('/dictionary')
-# Удаление слов
 @app.route('/delete_word/<word_key>')
 def delete_word(word_key):
-    if word_key in WORDS_DB:
-        del WORDS_DB[word_key]
+    for lvl in WM.words_db:
+        if word_key in WM.words_db[lvl]:
+            del WM.words_db[lvl][word_key]
+            break
+    WM.save_to_fine()
+    return redirect('/dictionary')
 
-    # Перезапись текста без слова
-    base_path = os.path.dirname(__file__)
-    file_path = os.path.join(base_path, 'words.txt')
-
-    # Чтение всех строк, кроме удаленной (при корректировки проверки слов, он удалил содержимое текстового документа (заметка: доделать адекватный словарь и его копию хранить дубликатом!)
-    remaining_lines = []
-    if os.path.exists(file_path):
-        with open(file_path, 'r', encoding='utf-8') as f:
-            for line in f: 
-                if not line.strip(): continue 
-                    # Проверка только английского слова
-                current_word = line.split(';')[0].lower().strip() 
-                if current_word != word_key.lower().strip():
-                    remaining_lines.append(line.strip()) 
-        with open(file_path, 'w', encoding='utf-8' ) as f:
-            f.write("\n".join(remaining_lines))  
-    return redirect('/dictionary')       
-
-# Чтобы можно было начать заново
 @app.route('/reset')
 def reset():
     global USED_WORDS, STREAK, LIVES
