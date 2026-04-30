@@ -129,6 +129,25 @@
             text-align: center; text-decoration: none; font-size: 16px;
             transition: all 0.3s;
         }
+        .card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 15px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 10px;
+        }
+
+        .card-actions a {
+            text-decoration: none;
+            font-size: 18px;
+            padding: 5px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+
+        .card-actions a:hover { background: #f1f5f9; }
+        
         .btn:hover { background: #0284c7; transform: translateY(-2px); }
 
         .btn-back { background: #64748b; display: block; height: auto; padding: 16px;}
@@ -153,7 +172,7 @@
                             </div>
                             <div class="card-actions">
                                 <a href="javascript:void(0)" onclick="editWord('{{ eng }}', '{{ data[0] }}', '{{ data[1] }}', '{{ theme }}')" style="text-decoration: none;">✏️</a>
-                                <a href="/delete_word/{{ eng }}" onclick="return confirm('Удалить?')" style="text-decoration: none;">🗑️</a>
+                                <a href="/delete_word/{{ eng|urlencode }}" onclick="return confirm('Удалить?')" style="text-decoration: none;">🗑️</a>
                             </div>
                         </div>
                         {% endfor %}

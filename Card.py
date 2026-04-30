@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect
 import random #
 import os 
 import shutil
+from urllib.parse import unquote
 app = Flask(__name__)
 
 
@@ -61,9 +62,11 @@ class WordManager:
             print(f"Ошибка загрузки: {e}")
     def save_to_file(self):
         lines = []
-        for lvl, words in self.words_db.items():
+        for theme, words in self.words_db.items():
             for eng, data in words.items():
-                lines.append(f"{eng};{data[0]};{data[1]};{lvl}")
+                rus=data[0] if len(data) > 0 else ""
+                info = data[1] if len(data) > 1 else ""
+                lines.append(f"{eng};{rus};{info};{theme}")
         with open(self.file_path, 'w', encoding='utf-8') as f:
             f.write("\n".join(lines))    
 
@@ -83,6 +86,7 @@ def index():
 
     if request.args.get('reset'):
         show_welcome=True
+        STREAK=0
         return redirect('/')
     
     if request.args.get('start'):
@@ -179,13 +183,21 @@ def add_word():
         WM.save_to_file()
     return redirect('/dictionary')  
 
-@app.route('/delete_word/<word_key>')
+@app.route('/delete_word/<path:word_key>')
 def delete_word(word_key):
-    for lvl in WM.words_db:
-        if word_key in WM.words_db[lvl]:
-            del WM.words_db[lvl][word_key]
-            break
-    WM.save_to_file()
+    clean_key = unquote(word_key).lower().strip()
+    found = False
+    themes = list(WM.words_db.keys())
+    for theme in themes:
+        for eng_word in list(WM.words_db[theme].keys()):
+            if eng_word.lower().strip() == clean_key:
+                del WM.words_db[theme][eng_word]
+                found=True
+                break
+        if not WM.words_db[theme]:
+            del WM.words_db[theme]           
+    if found:
+        WM.save_to_file()
     return redirect('/dictionary')
 
 @app.route('/reset')
