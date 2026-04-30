@@ -4,46 +4,86 @@
     <meta charset="UTF-8">
     <title>Мой Словарь — Учим Python</title>
     <style>
-        /* Общий стиль в духе основной игры */
+
         body { 
             font-family: 'Segoe UI', sans-serif; 
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
             margin: 0; padding: 40px 20px;
             display: flex; justify-content: center;
+            min-height: 100vh;
         }
 
         .container { 
-            width: 100%; max-width: 550px; 
+            width: 100%; max-width: 1200px; 
+            margin: 0 auto;
             animation: fadeIn 0.5s ease-out;
         }
+        .main-layout {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+        .left-side { flex: 1; }
 
+        .word-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+        .word-card {
+            background: white;
+            padding: 20px;
+            border-radius: 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: 0.3s;
+        }
+        .word-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+        }    
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         h1 { color: #1e3a8a; text-align: center; font-size: 32px; margin-bottom: 30px; }
 
-        /* Таблица заменена на карточки слов */
-        .word-list { margin-bottom: 40px; }
+        .theme-section {margin-bottom: 30px;}
+        .theme-title {
+            color: #64748b; font-size: 14px; text-transform: uppercase; 
+            letter-spacing: 1px; margin-left: 10px; margin-bottom: 10px;
+            display: block; font-weight: bold;
+        }
 
         .word-row {
             background: white;
-            padding: 20px;
-            border-radius: 20px;
-            margin-bottom: 12px;
+            padding: 15px 20px;
+            border-radius: 18px;
+            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
+            transition: 0.3s;
         }
 
         .word-row:hover { 
-            transform: scale(1.02); 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            transform: scale(1.01); 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08); 
         }
 
         .word-main b { color: #0ea5e9; font-size: 18px; display: block; }
         .word-main span { color: #1e293b; font-weight: 500; }
         .word-info { color: #94a3b8; font-size: 13px; margin-top: 4px; display: block; }
+
+        .right-side {
+            width: 350px;
+            position: sticky;
+            top: 50%;
+            transform: translateY(-50%);
+            height: fit-content;
+        }
 
         .delete-btn {
             text-decoration: none;
@@ -54,15 +94,25 @@
         }
         .delete-btn:hover { background: #fee2e2; }
 
-        /* Форма добавления */
+       
         .add-card {
             background: #ffffff;
-            padding: 30px;
+            padding: 25px;
             border-radius: 25px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             border: 2px dashed #bae6fd;
+            position: relative;
         }
-
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            text-decoration: none;
+            font-size: 22px;
+            color: #cbd5e1;
+            transition: 0.3s;
+            line-height: 1;
+        }
         .add-card h3 { color: #1e3a8a; margin-top: 0; margin-bottom: 20px; }
 
         input { 
@@ -81,7 +131,7 @@
         }
         .btn:hover { background: #0284c7; transform: translateY(-2px); }
 
-        .btn-back { background: #64748b; margin-top: 20px; }
+        .btn-back { background: #64748b; display: block; height: auto; padding: 16px;}
         .btn-back:hover { background: #475569; }
     </style>
 </head>
@@ -89,42 +139,53 @@
     <div class="container">
         <h1>📖 Мой Словарь</h1>
 
-        <div class="word-list">
-            {% for lvl, words_list in words.items() %}
-                <h2 style="color: #64748b; font-size: 18px; margin: 20px 0 10px 10px;">Уровень {{ lvl }}</h2>
-                {% for eng, data in words_list.items() %}
-            <div class="word-row">
-                <div class="word-main">
-                    <b>{{ eng }}</b>
-                    <span>{{ data[0] }}</span>
-                    <span class="word-info">{{ data[1] }}</span>
-                </div>
-                <a href="/delete_word/{{ eng }}" 
-                   onclick="return confirm('Удалить слово из базы?')" 
-                   class="delete-btn">
-                   🗑️
-                </a>
+        <div class="main-layout">
+            <div class="left-side">
+                {% for theme, words_list in words.items() %}
+                    <h2 style="color: #64748b; font-size: 16px; margin: 20px 0 10px 5px;">📂 Раздел: {{ theme }}</h2>
+                    <div class="word-grid">
+                        {% for eng, data in words_list.items() %}
+                        <div class="word-card">
+                            <div class="word-main">
+                                <b>{{ eng }}</b>
+                                <span>{{ data[0] }}</span>
+                                <span class="word-info">{{ data[1] }}</span>
+                            </div>
+                            <div class="card-actions">
+                                <a href="javascript:void(0)" onclick="editWord('{{ eng }}', '{{ data[0] }}', '{{ data[1] }}', '{{ theme }}')" style="text-decoration: none;">✏️</a>
+                                <a href="/delete_word/{{ eng }}" onclick="return confirm('Удалить?')" style="text-decoration: none;">🗑️</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        {% endfor %}
+            <div class="right-side">
+                <div class="add-card">
+                    <a href="/" class="close-btn" title="Вернуться к тренировке">✕</a>
+                    <h3 style="color: #1e3a8a; margin-top: 0; font-size: 18px;">Добавить / Изменить</h3>
+                    <form action="/add_word" method="post">
+                        <input type="text" name="eng" placeholder="Английское слово" required>
+                        <input type="text" name="rus" placeholder="Перевод" required>
+                        <input type="text" name="info" placeholder="Описание" required>
+                        <input list="themes" name="level" placeholder="Название раздела" required>
+                        <datalist id="themes">
+                            {% for theme in words.keys() %} <option value="{{ theme }}"> {% endfor %}
+                        </datalist>
+                        <button type="submit" class="btn">Сохранить</button>
+                    </form>
+                </div>
+            </div>
         </div>
-
-        <div class="add-card">
-            <h3>Добавить новое слово</h3>
-            <form action="/add_word" method="post">
-                <input type="text" name="eng" placeholder="Английское слово" required>
-                <input type="text" name="rus" placeholder="Перевод на русский" required>
-                <input type="text" name="info" placeholder="Описание или пример" required>
-                <select name="level" style="width: 100%; padding: 14px; margin-bottom: 12px; border: 2px solid #f1f5f9; border-radius: 12px; font-size: 16px; color: #64748b; outline: none;">
-                    <option value="1">Уровень 1 (Легко)</option>
-                    <option value="2">Уровень 2 (Средне)</option>
-                    <option value="3">Уровень 3 (Сложно)</option>   
-                </select>
-                <button type="submit" class="btn">Добавить в базу</button>
-            </form>
-        </div>
-
-        <a href="/" class="btn btn-back">Вернуться к тренировке</a>
     </div>
+
+    <script>
+    function editWord(eng, rus, info, lvl) {
+        document.querySelector('input[name="eng"]').value = eng;
+        document.querySelector('input[name="rus"]').value = rus;
+        document.querySelector('input[name="info"]').value = info;
+        document.querySelector('input[name="level"]').value = lvl;
+    }
+    </script>
 </body>
 </html>
